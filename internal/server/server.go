@@ -18,11 +18,15 @@ import (
 )
 
 func Run(config *Config) {
-	r := gin.New()
+	// Logger
+	logger, err := setupLogger(config)
+	if err != nil {
+		logger.Fatal(err.Error())
+		return
+	}
 
-	logger := setupLogger(config)
-
-	dbPool, err := setupDBPool(config, gorm.Config{
+	// DBPool
+	db, err := setupDBPool(config, gorm.Config{
 		Logger: gormLogger.New(
 			logger,
 			gormLogger.Config{
@@ -33,16 +37,22 @@ func Run(config *Config) {
 			},
 		),
 	})
-
 	if err != nil {
 		logger.Fatal(err.Error())
 		return
 	}
 
+	// GIN
+	gin.DefaultWriter = logger.Writer()
+	r := gin.New()
 	r.Use(middleware.LoggerMiddleware(logger))
-	r.Use(middleware.DBMiddleware(dbPool))
+	r.Use(middleware.DBMiddleware(db))
 
 	// TODO set route
+	// Service 객체 생성 시 dbPool 및 logger 를 주입. Service 단신으로 동작하도록 함
+	// Handler 객체 생성 시 Service 를 주입. Handler 내에서는 파라미터 파싱 하여 서비스 실행 및 결과를 바로 반환
+	// 결론적으로, middleware 는 필요 없던게?
+	// -> Service 를 middleware 로 주입. 핸들러에선 필요한 Service 를 상황에 맞게 가져와서 사용
 
 	r.Run(fmt.Sprintf(":%d", config.Server.Port))
 }
@@ -92,10 +102,10 @@ func setupDBPool(config *Config, db_config gorm.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-func setupLogger(config *Config) *log.Logger {
+func setupLogger(config *Config) (*log.Logger, error) {
 	fpLog, err := os.OpenFile("logging.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer fpLog.Close()
 
@@ -103,5 +113,5 @@ func setupLogger(config *Config) *log.Logger {
 
 	multiWriter := io.MultiWriter(os.Stdout, fpLog)
 	logger.SetOutput(multiWriter)
-	return logger
+	return logger, nil
 }

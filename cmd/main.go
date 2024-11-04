@@ -13,23 +13,32 @@ import (
 func main() {
 
 	config := &server.Config{}
-	configFile := flag.String("config", "config/config.yaml", "Config file(.yaml)")
-	fmt.Printf("Use [%s]", *configFile)
+	// configFile := flag.String("config", "config/config.yaml", "Config file(.yaml)")
+	configFile := flag.String("config", "", "Config file(.yaml)")
 
+	//
 	flag.Parse()
 
-	// TODO default 파일을 사용하지 않고, Config 객체 생성시 세팅(=default 파일이 없을 경우, 객체 세팅값 사용)
-	buf, err := os.ReadFile(*configFile)
-	if err != nil {
-		fmt.Print(err.Error())
-		panic(err)
-	}
+	//
+	if *configFile != "" {
+		fmt.Printf("Use config file: [%s]", *configFile)
+		buf, err := os.ReadFile(*configFile)
+		if err != nil {
+			fmt.Print(err.Error())
+			panic(err)
+		}
 
-	err = yaml.Unmarshal(buf, config)
-	if err != nil {
-		fmt.Print(err.Error())
-		panic(err)
+		err = yaml.Unmarshal(buf, config)
+		if err != nil {
+			fmt.Print(err.Error())
+			panic(err)
+		}
+	} else {
+		fmt.Println("Use default value")
+		config.Server.Port = 9000
+		config.Database.Type = "sqlite"
 	}
+	fmt.Printf("Config Detail:\n%v\n", config)
 
 	server.Run(config)
 }
