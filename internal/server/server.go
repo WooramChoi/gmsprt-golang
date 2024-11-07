@@ -2,57 +2,65 @@ package server
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"time"
 
-	"gmsprt-golang/internal/middleware"
+	"gmsprt-golang/internal/handlers"
+	"gmsprt-golang/internal/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	gormLogger "gorm.io/gorm/logger"
+	"gorm.io/gorm/logger"
 )
 
-func Run(config *Config) {
-	// Logger
-	logger, err := setupLogger(config)
-	if err != nil {
-		logger.Fatal(err.Error())
-		return
+type Config struct {
+	Server struct {
+		Port int
 	}
+	Database struct {
+		Type     string
+		Host     string
+		Port     int
+		Dbname   string
+		Username string
+		Password string
+	}
+}
+
+func Run(config *Config) {
 
 	// DBPool
 	db, err := setupDBPool(config, gorm.Config{
-		Logger: gormLogger.New(
-			logger,
-			gormLogger.Config{
+		Logger: logger.New(
+			log.New(os.Stdout, "", log.LstdFlags),
+			logger.Config{
 				SlowThreshold:             200 * time.Millisecond,
-				LogLevel:                  gormLogger.Warn,
+				LogLevel:                  logger.Info,
 				IgnoreRecordNotFoundError: false,
 				Colorful:                  true,
 			},
 		),
 	})
 	if err != nil {
-		logger.Fatal(err.Error())
+		log.Fatal(err.Error())
 		return
 	}
 
-	// GIN
-	gin.DefaultWriter = logger.Writer()
-	r := gin.New()
-	r.Use(middleware.LoggerMiddleware(logger))
-	r.Use(middleware.DBMiddleware(db))
+	// init DB
+	db.AutoMigrate(&models.Board{})
 
-	// TODO set route
-	// Service 객체 생성 시 dbPool 및 logger 를 주입. Service 단신으로 동작하도록 함
-	// Handler 객체 생성 시 Service 를 주입. Handler 내에서는 파라미터 파싱 하여 서비스 실행 및 결과를 바로 반환
-	// 결론적으로, middleware 는 필요 없던게?
-	// -> Service 를 middleware 로 주입. 핸들러에선 필요한 Service 를 상황에 맞게 가져와서 사용
+	// GIN
+	r := gin.New()
+	r.Use(gin.Logger())
+
+	boardHandlers := handlers.NewBoardHandlers(db)
+	boardRouter := r.Group("/boards")
+	boardRouter.GET("", boardHandlers.GetBoards)
+	boardRouter.POST("", boardHandlers.PostBoard)
 
 	r.Run(fmt.Sprintf(":%d", config.Server.Port))
 }
@@ -100,18 +108,4 @@ func setupDBPool(config *Config, db_config gorm.Config) (*gorm.DB, error) {
 	sqlDB.SetConnMaxLifetime(time.Hour)
 
 	return db, nil
-}
-
-func setupLogger(config *Config) (*log.Logger, error) {
-	fpLog, err := os.OpenFile("logging.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
-	if err != nil {
-		return nil, err
-	}
-	defer fpLog.Close()
-
-	logger := log.New(os.Stdout, "INFO: ", log.LstdFlags|log.Lshortfile)
-
-	multiWriter := io.MultiWriter(os.Stdout, fpLog)
-	logger.SetOutput(multiWriter)
-	return logger, nil
 }

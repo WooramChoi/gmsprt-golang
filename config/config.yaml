@@ -1,4 +1,9 @@
 server:
   port: 9000
 database:
-  type: "sqlite"
+  type: "postgres"
+  host: "192.168.10.102"
+  port: 30432
+  dbname: "gmsprt"
+  username: "gmsprt"
+  password: "shfmak44!"

@@ -6,14 +6,11 @@ import (
 
 /*
 Request Models
-TODO Service 와의 인터페이스 과정에 struct 를 사용할지 고민(항상 고민하는 것 같다)
 */
 type BoardSearch struct {
-	Page     int // TODO common type
-	PageSize int // TODO common type
-	Name     string
-	Toc      string
-	YnUse    string
+	Name  string
+	Toc   string
+	YnUse string
 }
 
 type BoardAdd struct {

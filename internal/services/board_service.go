@@ -1,8 +1,6 @@
 package services
 
 import (
-	"log"
-
 	"gmsprt-golang/internal/models"
 	"gmsprt-golang/pkg/gorm_scopes"
 	"gmsprt-golang/pkg/string_utils"
@@ -11,20 +9,18 @@ import (
 )
 
 type BoardService struct {
-	logger *log.Logger
-	db     *gorm.DB
+	db *gorm.DB
 }
 
-func New(logger *log.Logger, db *gorm.DB) *BoardService {
+func NewBoardService(db *gorm.DB) *BoardService {
 	boardService := BoardService{
-		logger: logger,
-		db:     db,
+		db: db,
 	}
 	return &boardService
 }
 
 // [GET] /boards
-func (boardService *BoardService) findBoards(listBoardSummary *[]BoardSummary, pageable *gorm_scopes.Pageable, query map[string]interface{}) error {
+func (boardService *BoardService) FindBoards(listBoardSummary *[]BoardSummary, pageable *gorm_scopes.Pageable, query map[string]interface{}) error {
 
 	// logger := boardService.logger
 	db := boardService.db
@@ -66,7 +62,7 @@ func (boardService *BoardService) findBoards(listBoardSummary *[]BoardSummary, p
 }
 
 // [POST] /boards
-func (boardService *BoardService) addBoard(boardDetails *BoardDetails, boardAdd *BoardAdd) error {
+func (boardService *BoardService) AddBoard(boardDetails *BoardDetails, boardAdd *BoardAdd) error {
 
 	db := boardService.db
 
@@ -97,7 +93,7 @@ func (boardService *BoardService) addBoard(boardDetails *BoardDetails, boardAdd 
 }
 
 // [GET] /boards/{ID}
-func (boardService *BoardService) findBoard(boardDetails *BoardDetails, ID uint) error {
+func (boardService *BoardService) FindBoard(boardDetails *BoardDetails, ID uint) error {
 
 	var info models.Board
 
@@ -124,7 +120,7 @@ func (boardService *BoardService) findBoard(boardDetails *BoardDetails, ID uint)
 }
 
 // [PATCH] /boards/{ID}
-func (boardService *BoardService) modifyBoard(boardDetails *BoardDetails, ID uint, boardModify *BoardModify) error {
+func (boardService *BoardService) ModifyBoard(boardDetails *BoardDetails, ID uint, boardModify *BoardModify) error {
 
 	var info models.Board
 
@@ -155,7 +151,7 @@ func (boardService *BoardService) modifyBoard(boardDetails *BoardDetails, ID uin
 }
 
 // [DELETE] /boards/{ID}
-func (boardService *BoardService) deleteBoardsById(ID uint) error {
+func (boardService *BoardService) DeleteBoardsById(ID uint) error {
 
 	var info models.Board
 

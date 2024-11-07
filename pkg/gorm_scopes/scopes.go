@@ -8,12 +8,12 @@ import (
 )
 
 type Pageable struct {
-	Page     int
-	PageSize int
+	Page     int `json:"page"`
+	PageSize int `json:"page_size"`
 	Sort     []struct {
-		Column string
-		IsDESC bool
-	}
+		Column string `json:"column"`
+		IsDESC bool   `json:"is_desc"`
+	} `json:"sort"`
 }
 
 // https://gorm.io/ko_KR/docs/scopes.html#pagination

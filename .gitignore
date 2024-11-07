@@ -24,4 +24,8 @@ go.work.sum
 # env file
 .env
 
+# Log 파일
 *.log
+
+# SQLITE DB 파일
+*.db

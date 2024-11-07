@@ -1,55 +1,77 @@
 package handlers
 
 import (
-	// "log"
-	// "net/http"
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
+	"gmsprt-golang/internal/services"
+	"gmsprt-golang/pkg/gorm_scopes"
 
 	"github.com/gin-gonic/gin"
-	// "gorm.io/gorm"
+	"gorm.io/gorm"
 )
 
+type BoardHandlers struct {
+	boardService *services.BoardService
+}
+
+func NewBoardHandlers(db *gorm.DB) *BoardHandlers {
+	boardService := services.NewBoardService(db)
+	boardHandlers := BoardHandlers{
+		boardService: boardService,
+	}
+	return &boardHandlers
+}
+
 // [GET] /boards
-func getBoards(c *gin.Context) {
+func (boardHandlers *BoardHandlers) GetBoards(c *gin.Context) {
 
-	// logger := c.MustGet("logger").(*log.Logger)
-	// db := c.MustGet("db").(*gorm.DB)
+	listBoardSummary := []services.BoardSummary{}
+	pageable := gorm_scopes.Pageable{
+		Page:     1,
+		PageSize: 10,
+	}
 
-	// session := board.serverDatabase.GetSession()
-	// session = session.Scopes(database.Paginate(req))
+	query := make(map[string]interface{})
+	for key, value := range c.Request.URL.Query() {
+		switch key {
+		case "page":
+			pageable.Page, _ = strconv.Atoi(value[0])
+		case "page_size":
+			pageable.PageSize, _ = strconv.Atoi(value[0])
+		default:
+			// TODO board table 에 존재하는 컬럼만 걸러내야함
+			query[key] = value[0]
+		}
+	}
 
-	// for column, value := range req.URL.Query() {
-	// TODO column-value 유효성 확인?
-	// 	session = session.Scopes(database.WhereEqual(column, value[0])) // TODO value list 처리
-	// }
-	// var boardInfos []BoardInfo
-	// if err := session.Find(&boardInfos).Error; err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-	// listBoardSummary := []BoardSummary{}
-	// for _, info := range boardInfos {
-	// TODO struct to struct 속성 복사: struct 임베디드 고려
-	// 	boardSummary := BoardSummary{
-	// 		BoardCommon: BoardCommon{
-	// 			ID:        info.ID,
-	// 			CreatedAt: info.CreatedAt,
-	// 			UpdatedAt: info.UpdatedAt,
-	// 			DeletedAt: info.DeletedAt.Time,
-	// 			Title:     info.Title,
-	// 			YnUse:     info.YnUse,
-	// 			Name:      info.Name,
-	// 		},
-	// 		ContentSummary: utils.Substr(info.PlainText, 255),
-	// 	}
-	// 	listBoardSummary = append(listBoardSummary, boardSummary)
-	// }
+	if err := boardHandlers.boardService.FindBoards(&listBoardSummary, &pageable, query); err != nil {
+		log.Println(err.Error())
+	}
 
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(listBoardSummary)
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"pageable": pageable,
+		"data":     listBoardSummary,
+	})
 }
 
 // [POST] /boards
-func postBoards(c *gin.Context) {
+func (boardHandlers *BoardHandlers) PostBoard(c *gin.Context) {
+
+	var boardDetails services.BoardDetails
+
+	var boardAdd services.BoardAdd
+	if err := c.BindJSON(&boardAdd); err != nil {
+		log.Println(err.Error())
+	}
+
+	if err := boardHandlers.boardService.AddBoard(&boardDetails, &boardAdd); err != nil {
+		log.Println(err.Error())
+	}
+
+	c.Redirect(http.StatusCreated, fmt.Sprintf("/boards/%d", boardDetails.ID))
 
 	// if req.Header.Get("Content-Type") != "application/json" {
 	// 	http.Error(w, "content-type is not application/json", http.StatusUnsupportedMediaType)
@@ -73,22 +95,8 @@ func postBoards(c *gin.Context) {
 	// http.Redirect(w, req, fmt.Sprintf("/boards/%d", info.ID), http.StatusCreated)
 }
 
-// [*] /boards/{ID}
-func boardsById(c *gin.Context) {
-	// switch req.Method {
-	// case http.MethodGet:
-	// 	board.getBoardsById(w, req)
-	// case http.MethodPatch:
-	// 	board.patchBoardsById(w, req)
-	// case http.MethodDelete:
-	// 	board.deleteBoardsById(w, req)
-	// default:
-	// 	http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-	// }
-}
-
 // [GET] /boards/{ID}
-func getBoardsById(c *gin.Context) {
+func (boardHandlers *BoardHandlers) GetBoard(c *gin.Context) {
 
 	// var info BoardInfo
 
@@ -119,7 +127,7 @@ func getBoardsById(c *gin.Context) {
 }
 
 // [PATCH] /boards/{ID}
-func patchBoardsById(c *gin.Context) {
+func (boardHandlers *BoardHandlers) PatchBoard(c *gin.Context) {
 
 	// if req.Header.Get("Content-Type") != "application/json" {
 	// 	http.Error(w, "content-type is not application/json", http.StatusUnsupportedMediaType)
@@ -147,7 +155,7 @@ func patchBoardsById(c *gin.Context) {
 }
 
 // [DELETE] /boards/{ID}
-func deleteBoardsById(c *gin.Context) {
+func (boardHandlers *BoardHandlers) DeleteBoard(c *gin.Context) {
 
 	// var info BoardInfo
 
