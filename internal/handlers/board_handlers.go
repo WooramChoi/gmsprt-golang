@@ -72,27 +72,6 @@ func (boardHandlers *BoardHandlers) PostBoard(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusCreated, fmt.Sprintf("/boards/%d", boardDetails.ID))
-
-	// if req.Header.Get("Content-Type") != "application/json" {
-	// 	http.Error(w, "content-type is not application/json", http.StatusUnsupportedMediaType)
-	// 	return
-	// }
-
-	// var info BoardInfo
-	// session := board.serverDatabase.GetSession()
-	// decoder := json.NewDecoder(req.Body)
-
-	// if err := decoder.Decode(&info); err != nil {
-	// 	http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
-
-	// if err := session.Create(&info).Error; err != nil {
-	// 	http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-	// 	return
-	// }
-
-	// http.Redirect(w, req, fmt.Sprintf("/boards/%d", info.ID), http.StatusCreated)
 }
 
 // [GET] /boards/{ID}
