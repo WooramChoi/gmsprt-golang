@@ -57,11 +57,17 @@ func Run(config *Config) {
 	r := gin.New()
 	r.Use(gin.Logger())
 
+	// Create Handlers
 	boardHandlers := handlers.NewBoardHandlers(db)
-	boardRouter := r.Group("/boards")
-	boardRouter.GET("", boardHandlers.GetBoards)
-	boardRouter.POST("", boardHandlers.PostBoard)
 
+	// Set Routers
+	boardRouter := r.Group("/boards")
+	{
+		boardRouter.GET("", boardHandlers.GetBoards)
+		boardRouter.POST("", boardHandlers.PostBoard)
+	}
+
+	// RUN
 	r.Run(fmt.Sprintf(":%d", config.Server.Port))
 }
 

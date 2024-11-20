@@ -77,6 +77,21 @@ func (boardHandlers *BoardHandlers) PostBoard(c *gin.Context) {
 // [GET] /boards/{ID}
 func (boardHandlers *BoardHandlers) GetBoard(c *gin.Context) {
 
+	var boardDetails services.BoardDetails
+
+	paramID := c.Param("ID")
+	uint64ID, err := strconv.ParseUint(paramID, 0, 64)
+	if err != nil {
+		log.Panicln(err.Error())
+	}
+	id := uint(uint64ID)
+
+	if err := boardHandlers.boardService.FindBoard(&boardDetails, id); err != nil {
+		log.Println(err.Error())
+	}
+
+	c.JSON(http.StatusOK, boardDetails)
+
 	// var info BoardInfo
 
 	// session := board.serverDatabase.GetSession()
