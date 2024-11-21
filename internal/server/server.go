@@ -65,6 +65,7 @@ func Run(config *Config) {
 	{
 		boardRouter.GET("", boardHandlers.GetBoards)
 		boardRouter.POST("", boardHandlers.PostBoard)
+		boardRouter.GET("/:ID", boardHandlers.GetBoard)
 	}
 
 	// RUN

@@ -7,13 +7,15 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+type Order struct {
+	Column string `json:"column"`
+	IsDESC bool   `json:"is_desc"`
+}
+
 type Pageable struct {
 	Page     int `json:"page"`
 	PageSize int `json:"page_size"`
-	Sort     []struct {
-		Column string `json:"column"`
-		IsDESC bool   `json:"is_desc"`
-	} `json:"sort"`
+	Sort     []Order `json:"sort"`
 }
 
 // https://gorm.io/ko_KR/docs/scopes.html#pagination
