@@ -19,6 +19,36 @@ func NewBoardService(db *gorm.DB) *BoardService {
 	return &boardService
 }
 
+/*
+reflect 를 통한 struct 간에 attribute 복사 방법:
+copy := reflect.New(reflect.TypeOf(original)).Elem().Interface().(Car)
+일단 사용하지 않도록 한다.
+*/
+func BoardModelToBoardDetails(info *models.Board, boardDetails *BoardDetails) {
+	boardDetails.BoardCommon.ID = info.ID
+	boardDetails.BoardCommon.CreatedAt = info.CreatedAt
+	boardDetails.BoardCommon.UpdatedAt = info.UpdatedAt
+	boardDetails.BoardCommon.DeletedAt = info.DeletedAt.Time
+	boardDetails.BoardCommon.Title = info.Title
+	boardDetails.BoardCommon.YnUse = info.YnUse
+	boardDetails.BoardCommon.Name = info.Name
+
+	boardDetails.Content = info.Content
+	boardDetails.PlainText = info.PlainText
+}
+
+func BoardModelToBoardSummary(info *models.Board, boardSummary *BoardSummary) {
+	boardSummary.BoardCommon.ID = info.ID
+	boardSummary.BoardCommon.CreatedAt = info.CreatedAt
+	boardSummary.BoardCommon.UpdatedAt = info.UpdatedAt
+	boardSummary.BoardCommon.DeletedAt = info.DeletedAt.Time
+	boardSummary.BoardCommon.Title = info.Title
+	boardSummary.BoardCommon.YnUse = info.YnUse
+	boardSummary.BoardCommon.Name = info.Name
+
+	boardSummary.ContentSummary = string_utils.Substr(info.PlainText, 255)
+}
+
 // [GET] /boards
 func (boardService *BoardService) FindBoards(listBoardSummary *[]BoardSummary, pageable *gorm_scopes.Pageable, query map[string]interface{}) error {
 
@@ -43,18 +73,8 @@ func (boardService *BoardService) FindBoards(listBoardSummary *[]BoardSummary, p
 	}
 	for _, info := range boards {
 		// TODO struct to struct 속성 복사: struct 임베디드 고려
-		boardSummary := BoardSummary{
-			BoardCommon: BoardCommon{
-				ID:        info.ID,
-				CreatedAt: info.CreatedAt,
-				UpdatedAt: info.UpdatedAt,
-				DeletedAt: info.DeletedAt.Time,
-				Title:     info.Title,
-				YnUse:     info.YnUse,
-				Name:      info.Name,
-			},
-			ContentSummary: string_utils.Substr(info.PlainText, 255),
-		}
+		boardSummary := BoardSummary{}
+		BoardModelToBoardSummary(&info, &boardSummary)
 		*listBoardSummary = append(*listBoardSummary, boardSummary)
 	}
 
@@ -79,16 +99,7 @@ func (boardService *BoardService) AddBoard(boardDetails *BoardDetails, boardAdd 
 		return err
 	}
 
-	boardDetails.BoardCommon.ID = info.ID
-	boardDetails.BoardCommon.CreatedAt = info.CreatedAt
-	boardDetails.BoardCommon.UpdatedAt = info.UpdatedAt
-	boardDetails.BoardCommon.DeletedAt = info.DeletedAt.Time
-	boardDetails.BoardCommon.Title = info.Title
-	boardDetails.BoardCommon.YnUse = info.YnUse
-	boardDetails.BoardCommon.Name = info.Name
-	boardDetails.Content = info.Content
-	boardDetails.PlainText = info.PlainText
-
+	BoardModelToBoardDetails(&info, boardDetails)
 	return nil
 }
 
@@ -105,17 +116,7 @@ func (boardService *BoardService) FindBoard(boardDetails *BoardDetails, ID uint)
 		return err
 	}
 
-	// TODO struct to struct 속성 복사: struct 임베디드 고려
-	boardDetails.BoardCommon.ID = info.ID
-	boardDetails.BoardCommon.CreatedAt = info.CreatedAt
-	boardDetails.BoardCommon.UpdatedAt = info.UpdatedAt
-	boardDetails.BoardCommon.DeletedAt = info.DeletedAt.Time
-	boardDetails.BoardCommon.Title = info.Title
-	boardDetails.BoardCommon.YnUse = info.YnUse
-	boardDetails.BoardCommon.Name = info.Name
-	boardDetails.Content = info.Content
-	boardDetails.PlainText = info.PlainText
-
+	BoardModelToBoardDetails(&info, boardDetails)
 	return nil
 }
 
@@ -136,17 +137,7 @@ func (boardService *BoardService) ModifyBoard(boardDetails *BoardDetails, ID uin
 		return err
 	}
 
-	// TODO struct to struct 속성 복사: struct 임베디드 고려
-	boardDetails.BoardCommon.ID = info.ID
-	boardDetails.BoardCommon.CreatedAt = info.CreatedAt
-	boardDetails.BoardCommon.UpdatedAt = info.UpdatedAt
-	boardDetails.BoardCommon.DeletedAt = info.DeletedAt.Time
-	boardDetails.BoardCommon.Title = info.Title
-	boardDetails.BoardCommon.YnUse = info.YnUse
-	boardDetails.BoardCommon.Name = info.Name
-	boardDetails.Content = info.Content
-	boardDetails.PlainText = info.PlainText
-
+	BoardModelToBoardDetails(&info, boardDetails)
 	return nil
 }
 

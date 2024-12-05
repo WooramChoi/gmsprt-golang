@@ -61,6 +61,13 @@ func Run(config *Config) {
 	boardHandlers := handlers.NewBoardHandlers(db)
 
 	// Set Routers
+	r.GET("", func(c *gin.Context) {
+		c.JSON(200, map[string]interface{}{
+			"header": c.Request.Header,
+			"query":  c.Request.URL.Query(),
+		})
+	})
+
 	boardRouter := r.Group("/boards")
 	{
 		boardRouter.GET("", boardHandlers.GetBoards)

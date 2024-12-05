@@ -123,7 +123,17 @@ func (boardHandlers *BoardHandlers) PatchBoard(c *gin.Context) {
 	}
 	id := uint(uint64ID)
 
-	
+	/*
+		TODO 생각 해보기
+		request body 에는 정확히 key-value 가 지정되어 있어서, 
+		내가 patch 하고자 하는 데이터를 명확히 할 수 있다.
+		(json 이 null 도 지원하므로, null 로 업데이트 치는 것도 가능하다)
+		그러나 service 에 model 로 넘기는 순간, 알 수 없게 된다.
+		애초에 service 에서 key-value 의 map 을 받는게 맞지 않는가? -> 검증을 할 방법이 없어진다.
+		-> 어차피 검증은 Controller 단에서 이뤄질 일이다. 신경 쓰지 말자.
+		OK
+		
+	*/
 
 	var boardModify services.BoardModify
 	if err := c.BindJSON(&boardModify); err != nil {
