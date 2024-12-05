@@ -9,6 +9,7 @@ FROM golang:1.23.3-alpine AS runner
 
 WORKDIR /app
 COPY --from=builder /build/main .
+RUN chmod +x main
 
 EXPOSE 9000
 ENTRYPOINT ["main"]
