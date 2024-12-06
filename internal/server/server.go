@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -33,6 +34,17 @@ type Config struct {
 
 func Run(config *Config) {
 
+	// GIN
+	r := gin.New()
+	r.Use(gin.Logger())
+
+	r.GET("", func(c *gin.Context) {
+		c.JSON(200, map[string]interface{}{
+			"header": c.Request.Header,
+			"query":  c.Request.URL.Query(),
+		})
+	})
+
 	// DBPool
 	db, err := setupDBPool(config, gorm.Config{
 		Logger: logger.New(
@@ -46,33 +58,24 @@ func Run(config *Config) {
 		),
 	})
 	if err != nil {
-		log.Fatal(err.Error())
-		return
-	}
+		// log.Fatal(err.Error())
+		// return
+		log.Print(err.Error())
+		log.Println("Routers associated with the database cannot be used.")
+	} else {
+		// init DB
+		db.AutoMigrate(&models.Board{})
 
-	// init DB
-	db.AutoMigrate(&models.Board{})
+		// Create Handlers
+		boardHandlers := handlers.NewBoardHandlers(db)
 
-	// GIN
-	r := gin.New()
-	r.Use(gin.Logger())
-
-	// Create Handlers
-	boardHandlers := handlers.NewBoardHandlers(db)
-
-	// Set Routers
-	r.GET("", func(c *gin.Context) {
-		c.JSON(200, map[string]interface{}{
-			"header": c.Request.Header,
-			"query":  c.Request.URL.Query(),
-		})
-	})
-
-	boardRouter := r.Group("/boards")
-	{
-		boardRouter.GET("", boardHandlers.GetBoards)
-		boardRouter.POST("", boardHandlers.PostBoard)
-		boardRouter.GET("/:ID", boardHandlers.GetBoard)
+		// Set Routers
+		boardRouter := r.Group("/boards")
+		{
+			boardRouter.GET("", boardHandlers.GetBoards)
+			boardRouter.POST("", boardHandlers.PostBoard)
+			boardRouter.GET("/:ID", boardHandlers.GetBoard)
+		}
 	}
 
 	// RUN
@@ -102,9 +105,9 @@ func setupDBPool(config *Config, db_config gorm.Config) (*gorm.DB, error) {
 		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Seoul", dbHost, dbUsername, dbPassword, dbDbname, dbPort)
 		db, err = gorm.Open(postgres.Open(dsn), &db_config)
 	case "sqlite":
-		fallthrough
-	default:
 		db, err = gorm.Open(sqlite.Open("gorm.db"), &db_config)
+	default:
+		err = errors.New("no database")
 	}
 
 	if err != nil {

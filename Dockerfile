@@ -1,15 +1,18 @@
 FROM golang:1.23.3 AS builder
+ENV CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
 
 WORKDIR /build
 COPY . .
 RUN go mod download
 RUN go build -o main cmd/main.go
 
-FROM golang:1.23.3-alpine AS runner
+FROM scratch
+ENV GIN_MODE=release
 
-WORKDIR /app
+WORKDIR /bin
 COPY --from=builder /build/main .
-RUN chmod +x main
 
 EXPOSE 9000
-ENTRYPOINT ["main"]
+ENTRYPOINT ["/bin/main"]

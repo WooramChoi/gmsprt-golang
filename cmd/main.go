@@ -36,7 +36,7 @@ func main() {
 	} else {
 		fmt.Println("Use default value")
 		config.Server.Port = 9000
-		config.Database.Type = "sqlite"
+		// config.Database.Type = "sqlite"
 	}
 	fmt.Printf("Config Detail:\n%v\n", config)
 
