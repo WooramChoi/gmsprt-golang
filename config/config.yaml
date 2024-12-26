@@ -1,4 +1,9 @@
 server:
   port: 9000
 database:
-  type: "sqlite"
+  type: "sqlite" # mysql / mariadb / postgres / sqlite
+  host: "127.0.0.1"
+  port: 5432
+  dbname: "dbname"
+  username: "username"
+  password: "password" # TODO from env

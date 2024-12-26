@@ -1,9 +1,9 @@
-package services
+package board_service
 
 import (
 	"gmsprt-golang/internal/models"
-	"gmsprt-golang/pkg/gorm_scopes"
-	"gmsprt-golang/pkg/string_utils"
+	"gmsprt-golang/internal/repository/gorm_scopes"
+	"gmsprt-golang/internal/utils"
 
 	"gorm.io/gorm"
 )
@@ -46,7 +46,7 @@ func BoardModelToBoardSummary(info *models.Board, boardSummary *BoardSummary) {
 	boardSummary.BoardCommon.YnUse = info.YnUse
 	boardSummary.BoardCommon.Name = info.Name
 
-	boardSummary.ContentSummary = string_utils.Substr(info.PlainText, 255)
+	boardSummary.ContentSummary = utils.Substr(info.PlainText, 255)
 }
 
 // [GET] /boards

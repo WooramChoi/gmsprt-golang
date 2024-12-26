@@ -13,8 +13,8 @@ type Order struct {
 }
 
 type Pageable struct {
-	Page     int `json:"page"`
-	PageSize int `json:"page_size"`
+	Page     int     `json:"page"`
+	PageSize int     `json:"page_size"`
 	Sort     []Order `json:"sort"`
 }
 

@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"gmsprt-golang/internal/handlers"
+	"gmsprt-golang/internal/handlers/board_handler"
 	"gmsprt-golang/internal/models"
 
 	"github.com/gin-gonic/gin"
@@ -67,14 +67,14 @@ func Run(config *Config) {
 		db.AutoMigrate(&models.Board{})
 
 		// Create Handlers
-		boardHandlers := handlers.NewBoardHandlers(db)
+		boardHandler := board_handler.NewBoardHandler(db)
 
 		// Set Routers
 		boardRouter := r.Group("/boards")
 		{
-			boardRouter.GET("", boardHandlers.GetBoards)
-			boardRouter.POST("", boardHandlers.PostBoard)
-			boardRouter.GET("/:ID", boardHandlers.GetBoard)
+			boardRouter.GET("", boardHandler.GetBoards)
+			boardRouter.POST("", boardHandler.PostBoard)
+			boardRouter.GET("/:ID", boardHandler.GetBoard)
 		}
 	}
 

@@ -1,35 +1,36 @@
-package handlers
+package board_handler
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"gmsprt-golang/internal/services"
-	"gmsprt-golang/pkg/gorm_scopes"
+	"gmsprt-golang/internal/repository/gorm_scopes"
+	"gmsprt-golang/internal/services/board_service"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-type BoardHandlers struct {
-	boardService *services.BoardService
+type BoardHandler struct {
+	boardService *board_service.BoardService
 }
 
-func NewBoardHandlers(db *gorm.DB) *BoardHandlers {
-	boardService := services.NewBoardService(db)
-	boardHandlers := BoardHandlers{
+func NewBoardHandler(db *gorm.DB) *BoardHandler {
+	boardService := board_service.NewBoardService(db)
+	boardHandlers := BoardHandler{
 		boardService: boardService,
 	}
 	return &boardHandlers
 }
 
 // [GET] /boards
-func (boardHandlers *BoardHandlers) GetBoards(c *gin.Context) {
+func (boardHandlers *BoardHandler) GetBoards(c *gin.Context) {
 
-	listBoardSummary := []services.BoardSummary{}
+	listBoardSummary := []board_service.BoardSummary{}
 	pageable := gorm_scopes.Pageable{
 		Page:     1,
 		PageSize: 10,
@@ -75,11 +76,11 @@ func (boardHandlers *BoardHandlers) GetBoards(c *gin.Context) {
 
 // [POST] /boards
 // curl -X POST -d '{"title": "Test01", "content": "<p>Content 01</p>", "plain_text": "Content 01", "name": "name01", "pwd": "1123"}' http://127.0.0.1:9000/boards
-func (boardHandlers *BoardHandlers) PostBoard(c *gin.Context) {
+func (boardHandlers *BoardHandler) PostBoard(c *gin.Context) {
 
-	var boardDetails services.BoardDetails
+	var boardDetails board_service.BoardDetails
 
-	var boardAdd services.BoardAdd
+	var boardAdd board_service.BoardAdd
 	if err := c.BindJSON(&boardAdd); err != nil {
 		log.Println(err.Error())
 	}
@@ -92,9 +93,9 @@ func (boardHandlers *BoardHandlers) PostBoard(c *gin.Context) {
 }
 
 // [GET] /boards/{ID}
-func (boardHandlers *BoardHandlers) GetBoard(c *gin.Context) {
+func (boardHandlers *BoardHandler) GetBoard(c *gin.Context) {
 
-	var boardDetails services.BoardDetails
+	var boardDetails board_service.BoardDetails
 
 	paramID := c.Param("ID")
 	uint64ID, err := strconv.ParseUint(paramID, 0, 64)
@@ -105,6 +106,16 @@ func (boardHandlers *BoardHandlers) GetBoard(c *gin.Context) {
 
 	if err := boardHandlers.boardService.FindBoard(&boardDetails, id); err != nil {
 		log.Println(err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, map[string]interface{}{
+				"msg": err.Error(),
+			})
+		} else {
+			c.JSON(http.StatusUnprocessableEntity, map[string]interface{}{
+				"msg": err.Error(),
+			})
+		}
+		return
 	}
 
 	c.JSON(http.StatusOK, boardDetails)
@@ -112,9 +123,9 @@ func (boardHandlers *BoardHandlers) GetBoard(c *gin.Context) {
 
 // [PATCH] /boards/{ID}
 // curl -X PATCH -d '{"title": "Test01-1", "content": "<p>Content 01-1</p>", "plain_text": "Content 01-1"}' http://127.0.0.1:9000/boards
-func (boardHandlers *BoardHandlers) PatchBoard(c *gin.Context) {
+func (boardHandlers *BoardHandler) PatchBoard(c *gin.Context) {
 
-	var boardDetails services.BoardDetails
+	var boardDetails board_service.BoardDetails
 
 	paramID := c.Param("ID")
 	uint64ID, err := strconv.ParseUint(paramID, 0, 64)
@@ -123,19 +134,7 @@ func (boardHandlers *BoardHandlers) PatchBoard(c *gin.Context) {
 	}
 	id := uint(uint64ID)
 
-	/*
-		TODO 생각 해보기
-		request body 에는 정확히 key-value 가 지정되어 있어서, 
-		내가 patch 하고자 하는 데이터를 명확히 할 수 있다.
-		(json 이 null 도 지원하므로, null 로 업데이트 치는 것도 가능하다)
-		그러나 service 에 model 로 넘기는 순간, 알 수 없게 된다.
-		애초에 service 에서 key-value 의 map 을 받는게 맞지 않는가? -> 검증을 할 방법이 없어진다.
-		-> 어차피 검증은 Controller 단에서 이뤄질 일이다. 신경 쓰지 말자.
-		OK
-		
-	*/
-
-	var boardModify services.BoardModify
+	var boardModify board_service.BoardModify
 	if err := c.BindJSON(&boardModify); err != nil {
 		log.Println(err.Error())
 	}
@@ -172,7 +171,7 @@ func (boardHandlers *BoardHandlers) PatchBoard(c *gin.Context) {
 }
 
 // [DELETE] /boards/{ID}
-func (boardHandlers *BoardHandlers) DeleteBoard(c *gin.Context) {
+func (boardHandlers *BoardHandler) DeleteBoard(c *gin.Context) {
 
 	// var info BoardInfo
 

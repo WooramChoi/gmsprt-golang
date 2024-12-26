@@ -1,4 +1,4 @@
-package services
+package board_service
 
 import (
 	"time"
